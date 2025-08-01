@@ -1,0 +1,109 @@
+version: '3'
+
+services:
+  mysql:
+    container_name: mysql
+    image: mariadb:10.6
+    environment:
+      MYSQL_ROOT_PASSWORD: Hamza112113172028
+      MYSQL_DATABASE: ilkveriTabani
+    labels:
+      mybackup.enable: "true"
+      mybackup.host: "mysql"
+      mybackup.port: "3306"
+      mybackup.user: "root"
+      mybackup.password: "Hamza112113172028"
+      mybackup.backup_format: "both"
+      mybackup.backup_interval_hours: "1"
+    volumes:
+      - ./mysql-init:/docker-entrypoint-initdb.d
+      - ./mysql-data-mysql:/var/lib/mysql
+    ports:
+      - "3320:3306"
+    networks:
+      - database-network
+
+  hamza:
+    container_name: hamza
+    image: mariadb:10.6
+    environment:
+      MYSQL_ROOT_PASSWORD: Hamza112113172028
+      MYSQL_DATABASE: ikinciveriTabani
+    labels:
+      mybackup.enable: "true"
+      mybackup.host: "hamza"
+      mybackup.port: "3306"
+      mybackup.user: "root"
+      mybackup.password: "Hamza112113172028"
+      mybackup.backup_format: "both"
+      mybackup.backup_interval_hours: "0.5"
+    volumes:
+      - ./mysql-init:/docker-entrypoint-initdb.d
+      - ./mysql-data-hamza:/var/lib/mysql
+    ports:
+      - "3321:3306"
+    networks:
+      - database-network
+
+  hamzam:
+    container_name: hamzam
+    image: mariadb:10.6
+    environment:
+      MYSQL_ROOT_PASSWORD: Hamza112113172028
+      MYSQL_DATABASE: ucncuveritabani
+    labels:
+      mybackup.enable: "true"
+      mybackup.host: "hamzam"
+      mybackup.port: "3306"
+      mybackup.user: "root"
+      mybackup.password: "Hamza112113172028"
+      mybackup.backup_format: "both"
+      mybackup.backup_interval_hours: "0.5"
+    volumes:
+      - ./mysql-init:/docker-entrypoint-initdb.d
+      - ./mysql-data-hamzam:/var/lib/mysql
+    ports:
+      - "3322:3306"
+    networks:
+      - database-network
+
+  deneme:
+    container_name: deneme
+    image: mariadb:10.6
+    environment:
+      MYSQL_ROOT_PASSWORD: Hamza112113172028
+      MYSQL_DATABASE: dorduncuveriTabani
+    labels:
+      mybackup.enable: "true"
+      mybackup.host: "deneme"
+      mybackup.port: "3306"
+      mybackup.user: "root"
+      mybackup.password: "Hamza112113172028"
+      mybackup.backup_format: "both"
+      mybackup.backup_interval_hours: "1"
+    volumes:
+      - ./mysql-init:/docker-entrypoint-initdb.d
+      - ./mysql-data-deneme:/var/lib/mysql
+    ports:
+      - "3323:3306"
+    networks:
+      - database-network
+
+  backup-service:
+    build: ./backup-service
+    container_name: database-backup-service
+    depends_on:
+      - mysql
+      - hamza
+      - hamzam
+      - deneme
+    volumes:
+      - ./backups:/app/backups
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    networks:
+      - database-network
+
+networks:
+  database-network:
+    driver: bridge
