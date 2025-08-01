@@ -14,7 +14,8 @@ services:
       mybackup.user: "root"
       mybackup.password: "Hamza112113172028"
       mybackup.backup_format: "both"
-      mybackup.backup_interval_hours: "1"
+      mybackup.backup_interval_hours: "1"          # Her 1 saatte bir yedekleme
+      mybackup.backup_times: "17:00,19:00,23:00"   # Belirli saatlerde yedekleme
     volumes:
       - ./mysql-init:/docker-entrypoint-initdb.d
       - ./mysql-data-mysql:/var/lib/mysql

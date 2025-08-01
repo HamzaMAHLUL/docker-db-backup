@@ -4,7 +4,7 @@ import subprocess
 import datetime
 import time
 import os
-from typing import List
+from typing import List, Optional
 from dataclasses import dataclass
 
 # Veritabanı yapı modeli
@@ -17,7 +17,8 @@ class DbItem:
     password: str
     backup_format: str
     backup_enabled: bool
-    backup_interval_hours: float  # Etiketten gelen zamanlayıcı değeri
+    backup_interval_hours: Optional[float] = None
+    backup_times: Optional[List[str]] = None  # Belirli saatler: ["17:00", "19:00"]
 
 # Docker etiketlerinden yedeklenebilir veritabanlarını çek
 def get_all_db_items() -> List[DbItem]:
@@ -28,6 +29,12 @@ def get_all_db_items() -> List[DbItem]:
     for container in containers:
         labels = container.labels
 
+        interval = labels.get("mybackup.backup_interval_hours")
+        times = labels.get("mybackup.backup_times")
+
+        backup_interval_hours = float(interval) if interval else None
+        backup_times = [t.strip() for t in times.split(",")] if times else None
+
         db_item = DbItem(
             container_name=container.name,
             host=labels.get("mybackup.host", "localhost"),
@@ -36,7 +43,8 @@ def get_all_db_items() -> List[DbItem]:
             password=labels.get("mybackup.password", ""),
             backup_format=labels.get("mybackup.backup_format", "sql"),
             backup_enabled=labels.get("mybackup.enable", "false").lower() == "true",
-            backup_interval_hours=float(labels.get("mybackup.backup_interval_hours", 24))
+            backup_interval_hours=backup_interval_hours,
+            backup_times=backup_times
         )
 
         db_items.append(db_item)
@@ -79,9 +87,17 @@ def backup_mysql_database(db: DbItem):
 def schedule_backups(db_items: List[DbItem]):
     for db in db_items:
         if db.backup_enabled:
-            interval_minutes = int(db.backup_interval_hours * 60)
-            schedule.every(interval_minutes).minutes.do(backup_mysql_database, db)
-            print(f"{db.container_name} → Her {interval_minutes} dakikada yedeklenecek.")
+            # Zaman aralığına göre
+            if db.backup_interval_hours is not None:
+                interval_minutes = int(db.backup_interval_hours * 60)
+                schedule.every(interval_minutes).minutes.do(backup_mysql_database, db)
+                print(f"{db.container_name} → Her {interval_minutes} dakikada yedeklenecek.")
+            
+            # Belirli saatlerde
+            if db.backup_times:
+                for time_str in db.backup_times:
+                    schedule.every().day.at(time_str).do(backup_mysql_database, db)
+                    print(f"{db.container_name} → Her gün saat {time_str}'de yedeklenecek.")
         else:
             print(f"{db.container_name}: Yedekleme devre dışı.")
 
@@ -92,12 +108,13 @@ def schedule_backups(db_items: List[DbItem]):
 
 # Ana fonksiyon
 if __name__ == "__main__":
-    print(" Docker içindeki yedeklenebilir veritabanları:")
+    print("Docker içindeki yedeklenebilir veritabanları:")
     db_items = get_all_db_items()
     for item in db_items:
         print(
             f"{item.container_name} - Host: {item.host}, Port: {item.port}, "
-            f"Enabled: {item.backup_enabled}, Interval (h): {item.backup_interval_hours}"
+            f"Enabled: {item.backup_enabled}, Interval (h): {item.backup_interval_hours}, "
+            f"Times: {item.backup_times}"
         )
 
     schedule_backups(db_items)
