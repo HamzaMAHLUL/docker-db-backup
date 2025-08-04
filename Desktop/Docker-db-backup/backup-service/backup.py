@@ -1,11 +1,11 @@
-import docker
-import schedule
-import subprocess
-import datetime
-import time
-import os
-from typing import List, Optional
-from dataclasses import dataclass
+import docker # Docker ile iletişim kurmak için
+import schedule # Görev zamanlayıcısı (örn: her 6 saatte bir çalıştırmak için)
+import subprocess # Terminal komutlarını çalıştırmak için (mysqldump gibi)
+import datetime   # Zaman damgası oluşturmak için
+import time # Bekleme (sleep) işlemleri için
+import os # Dosya ve klasör işlemleri için
+from typing import List, Optional # Tip belirleme (type hinting) için
+from dataclasses import dataclass # Otomatik veri sınıfı (data class) tanımlamak için
 
 # Veritabanı yapı modeli
 @dataclass
@@ -21,10 +21,10 @@ class DbItem:
     backup_times: Optional[List[str]] = None  # Belirli saatler: ["17:00", "19:00"]
 
 # Docker etiketlerinden yedeklenebilir veritabanlarını çek
-def get_all_db_items() -> List[DbItem]:
-    client = docker.from_env()
-    containers = client.containers.list(all=True)
-    db_items = []
+def get_all_db_items() -> List[DbItem]:#fonksiyonun ne tür bir değer döndürdüğünü gösterir
+    client = docker.from_env()#from_env() fonksiyonu, sistemde kurulu olan Docker'ın environment (ortam) bilgilerini kullanarak bir istemci (client) nesnesi oluşturur.Bu client, Docker konteynerleriyle iletişim kurmak için kullanılır.
+    containers = client.containers.list(all=True)# containers artık içinde Docker konteyner nesneleri barındıran bir listedir.Eğer all=False olsaydı, sadece çalışan (aktif) konteynerler gelirdi.
+    db_items = []#Sonuçları tutacak liste
 
     for container in containers:
         labels = container.labels
