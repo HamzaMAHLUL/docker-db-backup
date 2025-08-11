@@ -1,4 +1,13 @@
+version: "3.8"
 
+# Default labels for MyBackup
+x-mybackup-labels: &default-mybackup-labels  #bu bir anchor( etiket) olarak tanımlanır
+  mybackup.name: "MyBackup" 
+  mybackup.enable: "true"
+  mybackup.port: "3306"
+  mybackup.user: "root"
+  mybackup.password: "Hamza112113172028"
+  mybackup.backup_format: "both"
 
 services:
   mysql:
@@ -8,13 +17,10 @@ services:
       MYSQL_ROOT_PASSWORD: Hamza112113172028
       MYSQL_DATABASE: ilkveriTabani
     labels:
-      mybackup.enable: "true"
+      <<: *default-mybackup-labels # bu satır, default-mybackup-labels etiketini kullanır 
       mybackup.host: "mysql"
-      mybackup.port: "3306"
-      mybackup.user: "root"
-      mybackup.password: "Hamza112113172028"
-      mybackup.backup_format: "both"
-      mybackup.backup_times: "17:00,19:00,23:00"   # Belirli saatlerde yedekleme
+      mybackup.backup_times: "17:00,19:00,23:00"
+      mybackup.backup_folder: "ilke4"
     volumes:
       - ./mysql-init:/docker-entrypoint-initdb.d
       - ./mysql-data-mysql:/var/lib/mysql
@@ -30,13 +36,10 @@ services:
       MYSQL_ROOT_PASSWORD: Hamza112113172028
       MYSQL_DATABASE: ikinciveriTabani
     labels:
-      mybackup.enable: "true"
+      <<: *default-mybackup-labels
       mybackup.host: "hamza"
-      mybackup.port: "3306"
-      mybackup.user: "root"
-      mybackup.password: "Hamza112113172028"
-      mybackup.backup_format: "both"
       mybackup.backup_interval_hours: "0.5"
+      mybackup.backup_folder: "ilke3"
     volumes:
       - ./mysql-init:/docker-entrypoint-initdb.d
       - ./mysql-data-hamza:/var/lib/mysql
@@ -52,18 +55,34 @@ services:
       MYSQL_ROOT_PASSWORD: Hamza112113172028
       MYSQL_DATABASE: ucncuveritabani
     labels:
-      mybackup.enable: "true"
+      <<: *default-mybackup-labels
       mybackup.host: "hamzam"
-      mybackup.port: "3306"
-      mybackup.user: "root"
-      mybackup.password: "Hamza112113172028"
-      mybackup.backup_format: "both"
-      mybackup.backup_interval_hours: "0.5"
+      mybackup.backup_interval_hours: "0.0833"
+      mybackup.backup_folder: "ilke"
     volumes:
       - ./mysql-init:/docker-entrypoint-initdb.d
       - ./mysql-data-hamzam:/var/lib/mysql
     ports:
       - "3322:3306"
+    networks:
+      - database-network
+
+  testdb:
+    container_name: testdb
+    image: mariadb:10.6
+    environment:
+      MYSQL_ROOT_PASSWORD: Hamza112113172028
+      MYSQL_DATABASE: besinciveritabani
+    labels:
+      <<: *default-mybackup-labels
+      mybackup.host: "testdb"
+      mybackup.backup_interval_hours: "0.0833"
+      mybackup.backup_folder: "ilke1"
+    volumes:
+      - ./mysql-init:/docker-entrypoint-initdb.d
+      - ./mysql-data-testdb:/var/lib/mysql
+    ports:
+      - "3324:3306"
     networks:
       - database-network
 
@@ -74,13 +93,10 @@ services:
       MYSQL_ROOT_PASSWORD: Hamza112113172028
       MYSQL_DATABASE: dorduncuveriTabani
     labels:
-      mybackup.enable: "true"
+      <<: *default-mybackup-labels
       mybackup.host: "deneme"
-      mybackup.port: "3306"
-      mybackup.user: "root"
-      mybackup.password: "Hamza112113172028"
-      mybackup.backup_format: "both"
       mybackup.backup_interval_hours: "1"
+      mybackup.backup_folder: "ilke2"
     volumes:
       - ./mysql-init:/docker-entrypoint-initdb.d
       - ./mysql-data-deneme:/var/lib/mysql
@@ -97,6 +113,7 @@ services:
       - hamza
       - hamzam
       - deneme
+      - testdb
     volumes:
       - ./backups:/app/backups
       - /var/run/docker.sock:/var/run/docker.sock:ro
